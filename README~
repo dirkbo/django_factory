@@ -1,0 +1,16 @@
+Requirements:
+jsmin
+cssmin
+
+Usage;
+Add to used aapps
+Add url to projects urls.py:
+url(r'^factory/', include('django_factory.urls')),
+
+Add js and css files to directory:
+django_factory/templates/js/base.js.html
+django_factory/templates/css/base.css.html
+
+Invoke using urls templatetag:
+{% url css_file 'base' %}
+{% url js_file 'base' %}

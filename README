@@ -1,0 +1,25 @@
+Requirements:
+jsmin
+cssmin
+
+Usage;
+Add to used aapps
+Add url to projects urls.py:
+url(r'^factory/', include('django_factory.urls')),
+
+Add js and css files to directory:
+django_factory/templates/js/base.js.html
+django_factory/templates/css/base.css.html
+
+Invoke using urls templatetag:
+{% url css_file 'base' %} -> returns base.css.html
+{% url js_file 'base' %} -> returns base.js.html
+
+Advantages:
+- Use djangos' urls in your javavascript/css
+- Use djangos' translation in your javascript/css
+- Use djangos' include and extend functions to split large javascript/css files for better manageable code
+- Automatically compress and cache in deployment environments (gzip, cssmin, jsmin)
+- Automatically don't compress and cache in debug environment (settings.DEBUG=TRUE)
+
+
