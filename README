@@ -3,7 +3,7 @@ jsmin
 cssmin
 
 Usage;
-Add to used aapps
+Add to used apps
 Add url to projects urls.py:
 url(r'^factory/', include('django_factory.urls')),
 
@@ -12,8 +12,8 @@ django_factory/templates/js/base.js.html
 django_factory/templates/css/base.css.html
 
 Invoke using urls templatetag:
-{% url css_file 'base' %} -> returns base.css.html
-{% url js_file 'base' %} -> returns base.js.html
+{% url css_file 'base' %} -> links to base.css.html as "/factory/csss/base.css"
+{% url js_file 'base' %} -> links to base.js.html as "/factory/js/base.js"
 
 Advantages:
 - Use djangos' urls in your javavascript/css
