@@ -12,8 +12,8 @@ django_factory/templates/js/base.js.html
 django_factory/templates/css/base.css.html
 
 Invoke using urls templatetag:
-{% url css_file 'base' %} -> links to base.css.html as "/factory/css/base.css"
-{% url js_file 'base' %} -> links to base.js.html as "/factory/js/base.js"
+{% url 'css_file' 'base' %} -> links to base.css.html as "/factory/css/base.css"
+{% url 'js_file' 'base' %} -> links to base.js.html as "/factory/js/base.js"
 
 Advantages:
 - Use djangos' urls in your javavascript/css
