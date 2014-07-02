@@ -2,7 +2,7 @@
 import logging
 
 # Django imports
-from django.http import HttpResponse
+from django.http import HttpResponseBadRequest, HttpResponse
 from django.template.loader import render_to_string
 from django.conf import settings
 from django.views.decorators.gzip import gzip_page
@@ -20,8 +20,13 @@ def render_asset(template, request, content_type="text/plain",
     key = "asset-%s" % template
     resp = cache.get(key, False)
     if resp is False:
-        resp = render_to_string(template, {},
-                                context_instance=RequestContext(request))
+        try:
+            resp = render_to_string(template, {},
+                                    context_instance=RequestContext(request))
+        except Exception, e:
+            if settings.DEBUG:
+                raise e
+            return HttpResponseBadRequest("bad Request: %s" % template)
         if not settings.DEBUG or force_shrink is True:
             if content_type.endswith("javascript"):
                 from jsmin import jsmin
