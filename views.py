@@ -10,6 +10,7 @@ from django.template import RequestContext
 from django.core.cache import cache
 
 from hashlib import sha224
+from datetime import datetime
 
 # Get an instance of a logger
 logger = logging.getLogger('bluesoybean.custom')
@@ -37,18 +38,25 @@ def render_asset(template, request, content_type="text/plain",
         etag = sha224(resp.encode('utf-8')).hexdigest()
         resp = HttpResponse(resp, content_type=content_type)
         resp['etag'] = etag
-        #TODO: Far ahead expires header
+        
+        now = datetime.utcnow() 
+        modified = now.strftime('%H:%M:%S-%a/%d/%b/%Y')
+        resp['Last-Modified'] = modified
+        
         if not settings.DEBUG:
+            resp['Cache-Control'] = 'max-age'
+            expires = now.replace(year=now.year+1)
+            resp['Expires'] = expires.strftime('%H:%M:%S-%a/%d/%b/%Y')
             cache.set(key, resp, 600)
             logger.info("caching: %s" % template)
+        else:
+            resp['Cache-Control'] = 'no-cache'
     return resp
-
 
 @gzip_page
 def js_file(request, path):
     return render_asset('js/%s.js.html' % path, request,
                         content_type="text/javascript")
-
 
 @gzip_page
 def css_file(request, path):
