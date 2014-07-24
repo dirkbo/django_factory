@@ -38,11 +38,11 @@ def render_asset(template, request, content_type="text/plain",
         etag = sha224(resp.encode('utf-8')).hexdigest()
         resp = HttpResponse(resp, content_type=content_type)
         resp['etag'] = etag
-        
-        now = datetime.utcnow() 
+
+        now = datetime.utcnow()
         modified = now.strftime('%H:%M:%S-%a/%d/%b/%Y')
         resp['Last-Modified'] = modified
-        
+
         if not settings.DEBUG:
             resp['Cache-Control'] = 'max-age'
             expires = now.replace(year=now.year+1)
@@ -53,10 +53,12 @@ def render_asset(template, request, content_type="text/plain",
             resp['Cache-Control'] = 'no-cache'
     return resp
 
+
 @gzip_page
 def js_file(request, path):
     return render_asset('js/%s.js.html' % path, request,
                         content_type="text/javascript")
+
 
 @gzip_page
 def css_file(request, path):
