@@ -1,0 +1,102 @@
+////// Simple request Manager
+// http://stackoverflow.com/questions/4785724/queue-ajax-requests-using-jquery-queue
+
+
+var idle_counter = 0;
+// count idle loops in request manager; check for new items every 30 seconds if no unseen items.
+
+function closeWarning(){
+    return 'It looks like you have pending changes -- if you leave now, your changes will be lost.'
+}
+    
+function startLoading(lock) {
+    if ((typeof lock === "undefined") == true ) {
+         var lock = false;
+    }
+
+    $('#showLoading').toggle(true);
+    $('#refreshButton').toggle(false);
+    if (lock == true) {
+        window.onbeforeunload = closeWarning;
+    }
+}
+
+function doneLoading(lock) {
+    $('#showLoading').toggle(false);
+    $('#refreshButton').toggle(true);
+    window.onbeforeunload = null;
+}
+
+var ajaxManager = (function() {
+     var requests = [];
+     var requestsLow = [];
+
+     return {
+        addReq:  function(opt) {
+            requests.push(opt);
+        },
+        addReqLow:  function(opt) {
+            requestsLow.push(opt);
+        },
+        removeReq:  function(opt) {
+            if( $.inArray(opt, requests) > -1 )
+                requests.splice($.inArray(opt, requests), 1);
+        },
+        removeReqLow:  function(opt) {
+            if( $.inArray(opt, requestsLow) > -1 )
+                requestsLow.splice($.inArray(opt, requestsLow), 1);
+        },
+        run: function() {
+            var self = this,
+                orgSuc;
+
+            if( requests.length ) {
+                idle_counter = 0;
+                startLoading();
+                oriSuc = requests[0].complete;
+
+                requests[0].complete = function() {
+                     if( typeof oriSuc === 'function' ) oriSuc();
+                     requests.shift();
+                     self.run.apply(self, []);
+                };   
+
+                $.ajax(requests[0]);
+            } else if( requestsLow.length ) {
+                idle_counter = 0;
+                startLoading();
+                oriSuc = requestsLow[0].complete;
+
+                requestsLow[0].complete = function() {
+                     if( typeof oriSuc === 'function' ) oriSuc();
+                     requestsLow.shift();
+                     self.run.apply(self, []);
+                };   
+
+                $.ajax(requestsLow[0]);
+            } else {
+                doneLoading();
+                idle_counter += 1;
+                if (idle_counter > 29 ) {
+                    // do idle stuff
+                    if( typeof do_idle === 'function' ) do_idle();
+                    idle_counter = 0;
+                }
+                
+                self.tid = setTimeout(function() {
+                self.run.apply(self, []);
+              }, 1000);
+            }
+        },
+        stop:  function() {
+            requests = [];
+            clearTimeout(this.tid);
+        }
+     };
+}());
+
+$(document).ready(function () {
+    ajaxManager.run();
+});
+////////////////////////////////////////////////////////////////////////
+
