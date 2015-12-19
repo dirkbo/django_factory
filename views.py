@@ -1,9 +1,12 @@
 # -*- coding:utf-8 -*-
 import logging
+import csv
+import json
 
 # Django imports
-from django.http import HttpResponseBadRequest, HttpResponse
+from django.http import HttpResponseBadRequest, HttpResponse, JsonResponse
 from django.template.loader import render_to_string
+from django.shortcuts import render
 from django.conf import settings
 from django.views.decorators.gzip import gzip_page
 from django.template import RequestContext
@@ -14,6 +17,51 @@ from datetime import datetime
 
 # Get an instance of a logger
 logger = logging.getLogger('bluesoybean.custom')
+
+
+def factory_render(request, template, context):
+    output = context.get('output', 'html')
+    if output == 'html':
+        return render(request, template, context)
+    if output == 'json':
+        json_data = dict()
+        print context
+        for key in context:
+            value = context[key]
+            print "K: %s V: %s" % (key, value)
+            try:
+                json_data[key] = json.dumps(value)
+            except TypeError:
+                try:
+                    if value.id:
+                        nv = dict()
+                        nv['class'] = value.__class__.__name__
+                        nv['id'] = value.id
+                except AttributeError:
+                    try:
+                        st = str(value)
+                        json_data[key] = st
+                    except Exception as ex:
+                        template = "An exception of type {0} occured. Arguments:\n{1!r}"
+                        message = template.format(type(ex).__name__, ex.args)
+                        print message
+            except Exception as ex:
+                template = "An exception of type {0} occured. Arguments:\n{1!r}"
+                message = template.format(type(ex).__name__, ex.args)
+                print message
+        return JsonResponse(json_data)
+    if output == "csv":
+        fn = template.replace('.html', '')
+
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename="%s.csv"' % fn
+
+        writer = csv.writer(response)
+        for key in context:
+            value = context[key]
+            writer.writerow([key, value])
+
+        return response
 
 
 def render_asset(template, request, content_type="text/plain",
