@@ -79,6 +79,7 @@ var ajaxManager = (function() {
                 idle_counter += 1;
                 if (idle_counter > 29 ) {
                     // do idle stuff
+                    if( typeof do_idle === 'function' ) do_idle();
                     idle_counter = 0;
                 }
                 
