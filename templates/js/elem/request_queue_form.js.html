@@ -1,0 +1,83 @@
+{% include "js/elem/call_function_by_name.js.html" %}
+
+function bg_submit_form(form, start, successf, dataToBeSent) {
+    console.log("submit form (" + form + ") in background");
+    
+    if(typeof start !== 'undefined' && start != '') {
+        console.log('starting ' + start);
+        executeFunctionByName(start, window, data);
+    }
+    
+    url = $('form[name=' + form + ']').attr('action');
+
+    dataToBeSent = typeof dataToBeSent !== 'undefined' ? dataToBeSent : { };
+    
+    //console.log('input.');
+    //console.log($('form[name=' + form + '] :input'));
+    
+    $('form[name=' + form + '] :input').each(function() {
+        console.log(this);
+        dataToBeSent[this.name] = this.value;
+        // Append Data
+        $('form[name=' + form + '] :input[name="' + this.name +'"]').not(':input[type="hidden"]').val("");
+        // Clear form
+    });
+
+    //~ console.log("submitted data: " + dataToBeSent);
+    //~ console.log(dataToBeSent);
+    
+    ajaxManager.addReq({
+        type: 'POST',
+        url: url,
+        data: dataToBeSent,
+        success: function(data){
+            // Call function "after" with returned data
+            if(typeof successf !== 'undefined' && successf != '') {
+                console.log('success: running ' + successf);
+                executeFunctionByName(successf, window, data);
+            }
+            console.log('success');
+        }
+    });
+}
+
+function bg_submit_form_fromid(id, form, start, successf, dataToBeSent) {
+    console.log("submit form (" + form + ") in background");
+    
+    if(typeof start !== 'undefined' && start != '') {
+        console.log('starting ' + start);
+        executeFunctionByName(start, window, data);
+    }
+    
+    url = $('form[name=' + form + ']').attr('action');
+
+    dataToBeSent = typeof dataToBeSent !== 'undefined' ? dataToBeSent : { };
+    
+    //console.log('input.');
+    //console.log($('form[name=' + form + '] :input'));
+    
+    $('#' + id + ' :input').each(function() {
+        console.log(this);
+        dataToBeSent[this.name] = this.value;
+        // Append Data
+        $('#' + id + ' :input[name="' + this.name +'"]').not(':input[type="hidden"]').val("");
+        // Clear form
+    });
+
+    //~ console.log("submitted data: " + dataToBeSent);
+    //~ console.log(dataToBeSent);
+    
+    ajaxManager.addReq({
+        type: 'POST',
+        url: url,
+        data: dataToBeSent,
+        success: function(data){
+            // Call function "after" with returned data
+            if(typeof successf !== 'undefined' && successf != '') {
+                console.log('success: running ' + successf);
+                executeFunctionByName(successf, window, data);
+            }
+            console.log('success');
+        }
+    });
+}
