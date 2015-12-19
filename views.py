@@ -19,16 +19,18 @@ from datetime import datetime
 logger = logging.getLogger('bluesoybean.custom')
 
 
-def factory_render(request, template, context):
+def factory_render(request, template, context, verbose=False):
     output = context.get('output', 'html')
     if output == 'html':
         return render(request, template, context)
     if output == 'json':
         json_data = dict()
-        print context
+        if verbose:
+            print context
         for key in context:
             value = context[key]
-            print "K: %s V: %s" % (key, value)
+            if verbose:
+                print "K: %s V: %s" % (key, value)
             try:
                 json_data[key] = json.dumps(value)
             except TypeError:
@@ -44,11 +46,13 @@ def factory_render(request, template, context):
                     except Exception as ex:
                         template = "An exception of type {0} occured. Arguments:\n{1!r}"
                         message = template.format(type(ex).__name__, ex.args)
-                        print message
+                        if verbose:
+                            print message
             except Exception as ex:
                 template = "An exception of type {0} occured. Arguments:\n{1!r}"
                 message = template.format(type(ex).__name__, ex.args)
-                print message
+                if verbose:
+                    print message
         return JsonResponse(json_data)
     if output == "csv":
         fn = template.replace('.html', '')
