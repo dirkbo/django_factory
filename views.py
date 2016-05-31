@@ -70,8 +70,7 @@ def render_asset(template, request, content_type="text/plain",
     resp = cache.get(key, False)
     if resp is False:
         try:
-            resp = render_to_string(template, {},
-                                    context_instance=RequestContext(request))
+            resp = render_to_string(template, {})
         except Exception, e:
             if settings.DEBUG:
                 raise e

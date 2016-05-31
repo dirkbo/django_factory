@@ -1,0 +1,197 @@
+function FullImageClose() {
+    $('#ModalDialog').off("click");
+    $('#ModalDialog').toggle(false);
+    $('#mainBody').toggle(true);
+    $('.imageFull').attr("src", '')
+}
+
+function FullImageSize() {
+    var viewportHeight = $(window).height();
+    var viewportWidth = $(window).width();
+    var mh = viewportHeight - 100;
+    var w = $('.imageFull').width();
+    var h = $('.imageFull').height();
+
+    // console.log('viewportw ' + viewportWidth);
+    // console.log('viewporth ' + viewportHeight);
+    // console.log('w ' + w );
+    // console.log('h ' + h);
+
+    $('#FullImageBox').width(viewportWidth);
+    $('#FullImageBox').height(mh);
+
+    if (w > viewportWidth)  {
+        $('#FullImageBox').width(viewportWidth);
+        $('#FullImageBox').height('auto');
+    }
+    if ( h > mh) {
+        $('#FullImageBox').height(mh);
+        $('#FullImageBox').width('auto')
+    }
+}
+
+function openImage(source, gallery_id) {
+        var viewportHeight = $(window).height();
+        var viewportWidth = $(window).width();
+        var imgHeight = parseInt(viewportHeight * 0.9);
+        var imgWidth = parseInt(viewportWidth * 0.9);
+
+        var gallery;
+        if (gallery_id == null || gallery_id == false) {
+            gallery = '.GalleryContainer';
+            gallery_id = false;
+        } else {
+            gallery = '#' + gallery_id;
+        }
+        console.log("Using Gallery: " + gallery);
+
+        $('#ModalDialog').toggle(true);
+        $('#ModalDialog').click(function() { if (event.target === this) { {% if DEBUG %}console.log(event); {% endif %}FullImageClose(); }});
+        $('#mainBody').toggle(false);
+
+        // Detach Clicks
+        $('.imageFull').off( "click" );
+        $('#FullImageNext').off( "click" );
+        $('#FullImagePrevious').off( "click" );
+
+        if ($('.imageFull').attr("src") != source) {
+            $('.imageFull').toggle(false);
+            $('.imageFull').attr("src", '');
+            console.log("Loading " + source);
+
+            $('.imageFull').attr("src", source).one('load', function () {
+
+                $('.imageFull').toggle(true);
+
+                var source = $('.imageFull').attr("src");
+                console.log("Done Loading " + source)
+
+                // Get first and last
+                var first = $(gallery + ' img').first().attr('full');
+                var last = $(gallery + ' img').last().attr('full');
+
+                // Get Next and prev
+                var lel = $(gallery + " img[full='" + source + "']");
+                var next = lel.next().attr('full');
+                var prev = lel.prev().attr('full');
+
+                if (next != undefined) {
+                    $('#FullImageNext').click(function () {
+                        openImage(next, gallery_id);
+                    });
+                    $('.imageFull').click(function () {
+                        openImage(next, gallery_id);
+                    });
+                    $('#FullImageNext').removeAttr("disabled");
+                } else {
+                    $('.imageFull').click(function () {
+                        openImage(first, gallery_id);
+                    });
+                    $('#FullImageNext').click(function () {
+                        openImage(first, gallery_id);
+                    });
+                }
+
+                if (prev != undefined) {
+                    $('#FullImagePrevious').click(function () {
+                        openImage(prev, gallery_id);
+                    });
+                    $('#FullImagePrevious').removeAttr("disabled");
+                } else {
+                    $('#FullImagePrevious').click(function () {
+                        openImage(last, gallery_id);
+                    });
+                }
+
+                FullImageSize();
+            });
+        } else {
+                $('.imageFull').toggle(true);
+
+                // Get first and last
+                var first = $(gallery + ' img').first().attr('full');
+                var last = $(gallery + ' img').last().attr('full');
+
+                // Get Next and prev
+                var lel = $(gallery + " img[full='" + source + "']");
+                var next = lel.next().attr('full');
+                var prev = lel.prev().attr('full');
+
+                if (next != undefined) {
+                    $('#FullImageNext').click(function () {
+                        openImage(next, gallery_id);
+                    });
+                    $('.imageFull').click(function () {
+                        openImage(next, gallery_id);
+                    });
+                } else {
+                    $('.imageFull').click(function () {
+                        openImage(first, gallery_id);
+                    });
+                    $('#FullImageNext').click(function () {
+                        openImage(first, gallery_id);
+                    });
+                }
+
+                if (prev != undefined) {
+                    $('#FullImagePrevious').click(function () {
+                        openImage(prev, gallery_id);
+                    });
+
+                } else {
+                    $('#FullImagePrevious').click(function () {
+                        openImage(last, gallery_id);
+                    });
+                }
+            FullImageSize();
+        }
+
+    }
+
+function makeCollectingGallery(gallery_id) {
+    // Make sure every media from all gallerys on page are also in gallery with given id
+    var imgs = $('.gallery_image_s');
+    var gallery = $('#' + gallery_id);
+    for (var i = 0; i < imgs.length; i++) {
+        var img = $(imgs[i]);
+        // console.log(img);
+        var source = img.attr("full");
+        // console.log(source);
+        try {
+            var gimg = $("#" + gallery_id + " img[full='" + source + "']");
+            // console.log("img in main gallery: ");
+            // console.log(gimg);
+            if (gimg.length == 0) {
+                img.clone().appendTo("#" + gallery_id);
+            }
+        } catch(e) {
+            // img.clone().appendTo("#" + gallery_id);
+            console.log("ERROR Checking for image in main gallery");
+        }
+    }
+    // Make sure bindings work for new images
+    $('.gallery_image_s').click(function () {
+        var full_src = $(this).attr("full");
+        var gallery_id = false;
+        try {
+            gallery_id = $(this).parent().attr('id');
+        } catch(e) {
+            console.log(e)
+        }
+        openImage(full_src, gallery_id);
+    });
+}
+
+$( document ).ready(function() {
+    $('.FullImageClose').click(FullImageClose);
+    $('.gallery_image_s').click(function () {
+        var full_src = $(this).attr("full");
+        var gallery_id = false;
+        try {
+            gallery_id = $(this).parent().attr('id');
+        } catch(e) {
+            console.log(e)
+        }
+        openImage(full_src, gallery_id);
+    });
+});

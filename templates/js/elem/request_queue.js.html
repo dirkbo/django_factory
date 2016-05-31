@@ -13,7 +13,7 @@ function startLoading(lock) {
     if ((typeof lock === "undefined") == true ) {
          var lock = false;
     }
-
+    $('#ajax_loading').addClass('is-active');
     $('#showLoading').toggle(true);
     $('#refreshButton').toggle(false);
     if (lock == true) {
@@ -22,6 +22,7 @@ function startLoading(lock) {
 }
 
 function doneLoading(lock) {
+    $('#ajax_loading').removeClass('is-active');
     $('#showLoading').toggle(false);
     $('#refreshButton').toggle(true);
     window.onbeforeunload = null;
