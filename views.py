@@ -5,11 +5,9 @@ import json
 
 # Django imports
 from django.http import HttpResponseBadRequest, HttpResponse, JsonResponse
-from django.template.loader import render_to_string
 from django.shortcuts import render
 from django.conf import settings
 from django.views.decorators.gzip import gzip_page
-from django.template import RequestContext
 from django.core.cache import cache
 from django.template.loader import get_template
 
@@ -17,7 +15,7 @@ from hashlib import sha224
 from datetime import datetime
 
 # Get an instance of a logger
-logger = logging.getLogger('bluesoybean.custom')
+logger = logging.getLogger(__name__)
 
 
 def factory_render(request, template, context, verbose=False):
@@ -26,12 +24,10 @@ def factory_render(request, template, context, verbose=False):
         return render(request, template, context)
     if output == 'json':
         json_data = dict()
-        if verbose:
-            print(context)
+        logger.info(context)
         for key in context:
             value = context[key]
-            if verbose:
-                print("K: %s V: %s" % (key, value))
+            logger.debug("K: %s V: %s" % (key, value))
             try:
                 json_data[key] = json.dumps(value)
             except TypeError:
@@ -47,13 +43,11 @@ def factory_render(request, template, context, verbose=False):
                     except Exception as ex:
                         template = "An exception of type {0} occured. Arguments:\n{1!r}"
                         message = template.format(type(ex).__name__, ex.args)
-                        if verbose:
-                            print(message)
+                        logger.info(message)
             except Exception as ex:
                 template = "An exception of type {0} occured. Arguments:\n{1!r}"
                 message = template.format(type(ex).__name__, ex.args)
-                if verbose:
-                    print(message)
+                logger.warn(message)
         return JsonResponse(json_data)
     if output == "csv":
         fn = template.replace('.html', '')
@@ -75,7 +69,7 @@ def render_asset(template, request, content_type="text/plain",
     resp = cache.get(key, False)
     if resp is False:
         try:
-            resp = render_to_string(template, {})
+            resp = render(request, template, {})
         except Exception as e:
             if settings.DEBUG:
                 raise e
@@ -88,8 +82,8 @@ def render_asset(template, request, content_type="text/plain",
                 from cssmin import cssmin
                 resp = cssmin(resp)
 
-        etag = sha224(resp.encode('utf-8')).hexdigest()
-        resp = HttpResponse(resp, content_type=content_type)
+        etag = sha224(resp.content).hexdigest()
+        resp['Content-Type'] = content_type
         resp['etag'] = etag
 
         now = datetime.utcnow()
