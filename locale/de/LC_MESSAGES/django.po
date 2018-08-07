@@ -3,12 +3,11 @@
 # This file is distributed under the same license as the PACKAGE package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
 #
-#, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2018-08-07 11:51+0200\n"
+"POT-Creation-Date: 2018-08-07 11:55+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -25,8 +24,8 @@ msgstr "Diese Webseite verwendet Cookies"
 #: templates/js/elem/jquery-eu-cookie-law-popup.js.html:36
 msgid ""
 "We use cookies to ensure that we give you the best experience on our "
-"website. If you continue without changing your settings, we\\'ll assume that "
-"you are happy to receive all cookies on this website."
+"website. If you continue without changing your settings, we assume that you "
+"are happy to receive all cookies on this website."
 msgstr ""
 "Wir verwenden Cookies um die Funktion unserer Webseite sicherzustellen. Wenn "
 "Sie ohne Ihre Cookie-Einstellungen zu ändern fortfahren, gehen wir davon "
