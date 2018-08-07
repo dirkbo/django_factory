@@ -66,7 +66,7 @@ def factory_render(request, template, context, verbose=False):
 def render_asset(template, request, content_type="text/plain",
                  force_shrink=False):
     language = getattr(request, 'LANGUAGE_CODE', "")
-    key = "asset-%s-%" % (template, language)
+    key = "asset-%s-%s" % (template, language)
     resp = cache.get(key, False)
     if resp is False:
         try:
