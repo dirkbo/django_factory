@@ -1,3 +1,10 @@
 function changelang() {
+    if (getCookie !== undefined) {
+        let token_field = $('[name=csrfmiddlewaretoken]');
+        let csrf_from_cookie = getCookie('csrftoken');
+        if (token_field !== undefined && csrf_from_cookie !== undefined) {
+            token_field.val(csrf_from_cookie);
+        }
+    }
     $("form[name='language_switch_form']").submit()
 }
