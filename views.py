@@ -9,7 +9,7 @@ from django.shortcuts import render
 from django.conf import settings
 from django.views.decorators.gzip import gzip_page
 from django.core.cache import cache
-from django.template.loader import get_template
+from django.template.loader import get_template, render_to_string
 
 from hashlib import sha224
 from datetime import datetime
@@ -68,21 +68,34 @@ def render_asset(template, request, content_type="text/plain",
     language = getattr(request, 'LANGUAGE_CODE', "")
     key = "asset-%s-%s" % (template, language)
     resp = cache.get(key, False)
+    debug = settings.DEBUG
+
     if resp is False:
         try:
-            resp = render(request, template, {})
+            resp = render_to_string(template, request=request)
         except Exception as e:
-            if settings.DEBUG:
+            if debug:
                 raise e
+            else:
+                logger.warning(e)
             return HttpResponseBadRequest("bad Request: %s" % template)
-        if not settings.DEBUG or force_shrink is True:
-            if content_type.endswith("javascript"):
-                from jsmin import jsmin
-                resp = jsmin(resp)
-            if content_type.endswith("css"):
-                from cssmin import cssmin
-                resp = cssmin(resp)
 
+        if not debug or force_shrink is True:
+            try:
+                if content_type.endswith("javascript"):
+                    from jsmin import jsmin
+                    resp = jsmin(resp)
+            except Exception as e:
+                logger.warning("error shrinking js: %s", e)
+
+            try:
+                if content_type.endswith("css"):
+                    from cssmin import cssmin
+                    resp = cssmin(resp)
+            except Exception as e:
+                logger.warning("error shrinking css: %s", e)
+
+        resp = HttpResponse(resp)
         etag = sha224(resp.content).hexdigest()
         resp['Content-Type'] = content_type
         resp['etag'] = etag
@@ -91,7 +104,7 @@ def render_asset(template, request, content_type="text/plain",
         modified = now.strftime('%H:%M:%S-%a/%d/%b/%Y')
         resp['Last-Modified'] = modified
 
-        if not settings.DEBUG:
+        if not debug:
             resp['Cache-Control'] = 'max-age'
             expires = now.replace(year=now.year+1)
             resp['Expires'] = expires.strftime('%H:%M:%S-%a/%d/%b/%Y')
