@@ -1,0 +1,365 @@
+
+function FullImageClose() {
+    //$('#mainBody').toggle(true);
+    try {
+      if (document.fullscreenElement) {
+        document.exitFullscreen();
+      }
+    } catch (e) {
+      console.log(e);
+    }
+
+    let imf = document.querySelector('.imageFull');
+    imf.setAttribute('source', '');
+    
+    let dialog =  document.querySelector('#ModalDialog');
+    dialog.removeAttribute('style'); // Make sure old version doesnt block (display none vs hidden)
+    dialog.hidden = true;
+    dialog.removeEventListener('click', clickFullImage);
+    
+}
+
+function FullImageSize() {
+    let viewportHeight = window.innerHeight;
+    let viewportWidth = window.innerWidth;
+    let mh = parseInt(viewportHeight) - 50;
+    let mw = parseInt(viewportWidth) - 50;
+    
+    let height_style= 'auto';
+    let width_style ='auto';
+    
+    let imf = document.querySelector('.imageFull');
+    let fullImageBox = document.querySelector('#FullImageBox');
+    
+    // reset fullimagebox
+    let img_style = "height: " + height_style + "; width: " + width_style + "; max-height: " + mh + "px; max-width: " + mw + "px;";
+    fullImageBox.setAttribute('style', img_style);
+    
+    let w = imf.width;
+    let h = imf.height;
+    let padding_top = 0;
+
+    //console.log('viewport w ' + viewportWidth);
+    //console.log('viewport h ' + viewportHeight);
+    //console.log('w ' + w );
+    //console.log('h ' + h);
+    // console.log('mh ' + mh);
+    
+    // Scale down FullImageBox if image is too Big
+    if (w > mw)  {
+        width_style = mw.toString() + 'px';
+    } else {
+        width_style = w.toString() + 'px';
+    }
+    if (h > mh) {
+        height_style = mh.toString() + 'px';
+    } else {
+        // Calculate margin
+        padding_top = (mh -h) / 2;
+        if (padding_top > 10) {
+            height_style = h.toString() + 'px; padding-top: ' + padding_top + "px";
+        } else {
+            height_style = h.toString() + 'px';
+        }
+    }
+    
+    img_style = "height: " + height_style + "; width: " + width_style + "; max-height: " + mh + "px; max-width: " + mw + "px;";
+    fullImageBox.setAttribute('style', img_style);
+    // console.log("Adjusted: " + mw + "x" + mh );
+}
+
+function clickFullImage() {
+    //$('#ModalDialog').click(function() {
+    if (event.target === this) {
+        // console.log(event);
+        FullImageClose();
+    }
+}
+
+function getGallery(gallery_id) {
+    let gallery;
+    if (gallery_id == null || gallery_id == false) {
+        gallery = '.GalleryContainer';
+    } else {
+        if (gallery_id.startsWith('.')) {
+            gallery = gallery_id;
+        } else if (gallery_id.startsWith('#')) {
+            gallery = gallery_id;
+        } else
+            gallery = '#' + gallery_id;
+    }
+    // console.log("Using Gallery: " + gallery);
+    return gallery;
+}
+
+function loadImageDone() {
+    let imageFull = document.querySelector('.imageFull');
+    imageFull.hidden = false;
+    
+    
+    let source = imageFull.getAttribute("src");
+    // console.log("Done Loading " + source);
+    
+    let gallery = getGallery(false);
+
+    // Get first and last
+    let galleryImages = document.querySelectorAll(gallery + ' img');
+    let first = null;
+    let first_preview = null;
+    
+    if (galleryImages[0] !== null) {
+        first = galleryImages[0].getAttribute('full');
+        first_preview = galleryImages[0].getAttribute('src');
+    }
+    let last = null;
+    if (galleryImages[galleryImages.length - 1] !== null)
+        last = galleryImages[galleryImages.length - 1].getAttribute('full');
+    
+    //var first = galleryImages.first().attr('full');
+    //var last = galleryImages.last().attr('full');
+
+    // Get Next and prev
+    //var lel = $(gallery + " img[full='" + source + "']");
+    let lel = document.querySelector(gallery + " img[full='" + source + "']");
+    let next = null;
+    let next_preview = null;
+    if (lel.nextElementSibling !== null) {
+        next = lel.nextElementSibling.getAttribute('full');
+        next_preview = lel.nextElementSibling.getAttribute('src');
+        //console.log("next preview: " + next_preview);
+    }
+    let prev = null;
+    if (lel.previousElementSibling !== null)
+        prev = lel.previousElementSibling.getAttribute('full');
+    // var prev = lel.prev().attr('full');
+    
+    // Resize displayed images
+    FullImageSize();
+
+    if (next !== null) {
+        // handle click on next-button, if exists
+        let fin = document.querySelector('#FullImageNext');
+        if (fin !== null) {
+            fin.addEventListener('click', function (e) {
+                if (next_preview == null) {
+                    openImage(next, gallery);
+                } else {
+                    openImage(next, gallery, next_preview);
+                }
+                e.stopPropagation();
+            });
+            if (fin.disabled) {
+                fin.disabled = false;
+            }
+        }
+        
+        // Handle click on full image
+        if (next_preview == null) {
+            imageFull.addEventListener('click', function (e) {
+                openImage(next, gallery);
+                e.stopPropagation();
+            });
+        } else {
+            imageFull.addEventListener('click', function (e) {
+                openImage(next, gallery, next_preview);
+                e.stopPropagation();
+            });
+        }
+    } else {
+        if (first !== null) {
+            let fin = document.querySelector('#FullImageNext');
+            if (fin !== null) {
+                fin.addEventListener('click', function (e) {
+                    openImage(first, gallery);
+                    e.stopPropagation();
+                });
+                if (fin.disabled) {
+                    fin.disabled = false;
+                }
+            }
+            
+            if (first_preview == null) {
+                imageFull.addEventListener('click', function (e) {
+                    openImage(first, gallery);
+                    e.stopPropagation();
+                });
+            } else {
+                imageFull.addEventListener('click', function (e) {
+                    openImage(first, gallery, first_preview);
+                    e.stopPropagation();
+                });
+            }
+        }
+    }
+
+    if (prev !== null) {
+        let fip = document.querySelector('#FullImagePrevious');
+        if (fip !== null) {
+            fip.addEventListener('click', function (e) {
+                openImage(prev, gallery);
+                e.stopPropagation();
+            });
+            if (fip.disabled) {
+                fip.disabled = false;
+            }
+        }
+    } else {
+        if (last !== null) {
+            let fip = document.querySelector('#FullImagePrevious');
+            if (fip !== null) {
+                fip.addEventListener('click', function (e) {
+                    openImage(last, gallery);
+                    e.stopPropagation();
+                });
+                if (fip.disabled) {
+                    fip.disabled = false;
+                }
+            }
+        }
+    }
+    
+}
+
+function openImage(source, gallery_id, preview) {
+    let gallery = getGallery(gallery_id);
+    
+    let dialog =  document.querySelector('#ModalDialog');
+    dialog.removeAttribute('style'); // Make sure old version doesnt block (display none vs hidden)
+    dialog.hidden = false;
+    dialog.addEventListener("click", clickFullImage);
+    
+    // let mainBody = document.body;
+    // mainBody.setAttribute('style', '');
+    // mainBody.hidden = true;
+    if (preview !== "undefined" && preview != null)
+        console.log("Preview Image: Set ");
+    else
+        console.log("Preview Image: Not Set");
+    
+    // Detach Clicks
+    let imf = document.querySelector('.imageFull');
+    // imf.removeEventListener('click');
+    // TODO: Needs function name as second
+    
+    let fib = document.querySelector('#FullImageBox');
+    
+    let fin = document.querySelector('#FullImageNext');
+    //fin.removeEventListener('click');
+    // TODO: Needs function name as second
+    
+    let fip = document.querySelector('#FullImagePrevious');
+    //fin.removeEventListener('click');
+    // TODO: Needs function name as second
+    
+    if (imf.getAttribute('src') != source) {
+        // console.log("Source doesnt match, needs to load");
+        if (preview !== "undefined" && preview != null) {
+            imf.hidden = false;
+            imf.style.backgroundRepeat = "no-repeat";
+            imf.style.backgroundImage = "url('" + preview + "')";
+            imf.style.backgroundPosition = "center";
+            imf.style.backgroundSize = "cover";
+            imf.src = '';
+            imf.style.width = fib.width;
+            imf.style.height = fib.height;
+        } else {
+            imf.hidden = true;
+            imf.src = '';
+        }
+        imf.addEventListener('load', loadImageDone);
+        imf.src = source;
+    } else {
+        // console.log("Images match!");
+        FullImageSize();
+    }
+    
+    //let elem = document.querySelector(dialog);
+    try {
+        if (!document.fullscreenElement) {
+            dialog.requestFullscreen().then({}).catch(err => {
+                console.log(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`);
+                });
+        }
+    } catch (e) {
+        console.log(e);
+    }
+}
+
+function makeCollectingGallery(gallery_id) {
+    // Make sure every media from all gallerys on page are also in gallery with given id
+    var imgs = $('.gallery_image_s');
+    var gallery = $('#' + gallery_id);
+    for (var i = 0; i < imgs.length; i++) {
+        var img = $(imgs[i]);
+        // console.log(img);
+        var source = img.attr("full");
+        // console.log(source);
+        try {
+            var gimg = $("#" + gallery_id + " img[full='" + source + "']");
+            // console.log("img in main gallery: ");
+            // console.log(gimg);
+            if (gimg.length == 0) {
+                img.clone().appendTo("#" + gallery_id);
+            }
+        } catch(e) {
+            // img.clone().appendTo("#" + gallery_id);
+            console.log("ERROR Checking for image in main gallery");
+        }
+    }
+    // Make sure bindings work for new images
+    $('.gallery_image_s').click(function () {
+        var full_src = $(this).attr("full");
+        var gallery_id = false;
+        try {
+            gallery_id = $(this).parent().attr('id');
+        } catch(e) {
+            console.log(e)
+        }
+        openImage(full_src, gallery_id);
+    });
+}
+
+function injectModal() {
+    // Insert Modal Dialog into Dom, if it doesn't exist
+    if (document.getElementById("ModalDialog") === null) {
+        let container = document.createElement('div');
+        container.id= "ModalDialog";
+        container.hidden = true;
+        container.innerHTML = '<div id="FullImageBox">\n<img class="imageFull" src="">\n</div>';
+        document.body.appendChild(container);
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    let GalleryImages = document.querySelectorAll('.gallery_image_s');
+    
+    if (GalleryImages.length > 0) {
+        injectModal();
+    
+        let fimc = document.querySelector('#FullImageBox');
+        if (fimc !== null)
+            fimc.addEventListener('click', FullImageClose);
+    
+    
+        GalleryImages.forEach(function (g) {
+            let full = g.getAttribute("full");
+            let small = null;
+            small = g.getAttribute("src");
+            let gallery_id = null;
+            gallery_id = g.parentElement.id;
+            if (small != null) {
+                g.addEventListener('click', function (e) {
+                    openImage(full, gallery_id, small);
+                });
+            } else {
+                g.addEventListener('click', function (e) {
+                    openImage(full, gallery_id);
+                });
+            }
+        });
+        
+        window.addEventListener("resize", function() {
+	          FullImageSize();
+        }, false);
+    }
+});

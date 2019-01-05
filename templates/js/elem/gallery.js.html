@@ -76,30 +76,36 @@ function openImage(source, gallery_id) {
                 var prev = lel.prev().attr('full');
 
                 if (next != undefined) {
-                    $('#FullImageNext').click(function () {
+                    $('#FullImageNext').click(function (e) {
                         openImage(next, gallery_id);
+                        e.stopPropagation();
                     });
-                    $('.imageFull').click(function () {
+                    $('.imageFull').click(function (e) {
                         openImage(next, gallery_id);
+                        e.stopPropagation();
                     });
                     $('#FullImageNext').removeAttr("disabled");
                 } else {
-                    $('.imageFull').click(function () {
+                    $('.imageFull').click(function (e) {
                         openImage(first, gallery_id);
+                        e.stopPropagation();
                     });
-                    $('#FullImageNext').click(function () {
+                    $('#FullImageNext').click(function (e) {
                         openImage(first, gallery_id);
+                        e.stopPropagation();
                     });
                 }
 
                 if (prev != undefined) {
-                    $('#FullImagePrevious').click(function () {
+                    $('#FullImagePrevious').click(function (e) {
                         openImage(prev, gallery_id);
+                        e.stopPropagation();
                     });
                     $('#FullImagePrevious').removeAttr("disabled");
                 } else {
-                    $('#FullImagePrevious').click(function () {
+                    $('#FullImagePrevious').click(function (e) {
                         openImage(last, gallery_id);
+                        e.stopPropagation();
                     });
                 }
 
@@ -118,29 +124,35 @@ function openImage(source, gallery_id) {
                 var prev = lel.prev().attr('full');
 
                 if (next != undefined) {
-                    $('#FullImageNext').click(function () {
+                    $('#FullImageNext').click(function (e) {
                         openImage(next, gallery_id);
+                        e.stopPropagation();
                     });
-                    $('.imageFull').click(function () {
+                    $('.imageFull').click(function (e) {
                         openImage(next, gallery_id);
+                        e.stopPropagation();
                     });
                 } else {
-                    $('.imageFull').click(function () {
+                    $('.imageFull').click(function (e) {
                         openImage(first, gallery_id);
+                        e.stopPropagation();
                     });
-                    $('#FullImageNext').click(function () {
+                    $('#FullImageNext').click(function (e) {
                         openImage(first, gallery_id);
+                        e.stopPropagation();
                     });
                 }
 
                 if (prev != undefined) {
-                    $('#FullImagePrevious').click(function () {
+                    $('#FullImagePrevious').click(function (e) {
                         openImage(prev, gallery_id);
+                        e.stopPropagation();
                     });
 
                 } else {
-                    $('#FullImagePrevious').click(function () {
+                    $('#FullImagePrevious').click(function (e) {
                         openImage(last, gallery_id);
+                        e.stopPropagation();
                     });
                 }
             FullImageSize();
@@ -182,8 +194,9 @@ function makeCollectingGallery(gallery_id) {
     });
 }
 
-$( document ).ready(function() {
+$(document).ready(function() {
     $('.FullImageClose').click(FullImageClose);
+    $('#FullImageBox').click(FullImageClose);
     $('.gallery_image_s').click(function () {
         var full_src = $(this).attr("full");
         var gallery_id = false;

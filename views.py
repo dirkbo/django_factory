@@ -7,12 +7,13 @@ import json
 from django.http import HttpResponseBadRequest, HttpResponse, JsonResponse
 from django.shortcuts import render
 from django.conf import settings
+from django.utils import timezone
 from django.views.decorators.gzip import gzip_page
 from django.core.cache import cache
 from django.template.loader import get_template, render_to_string
 
 from hashlib import sha224
-from datetime import datetime
+from datetime import datetime, timedelta
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
@@ -64,7 +65,7 @@ def factory_render(request, template, context, verbose=False):
 
 
 def render_asset(template, request, content_type="text/plain",
-                 force_shrink=False):
+                 force_shrink=True):
     language = getattr(request, 'LANGUAGE_CODE', "")
     key = "asset-%s-%s" % (template, language)
     resp = cache.get(key, False)
@@ -72,7 +73,7 @@ def render_asset(template, request, content_type="text/plain",
 
     if resp is False:
         try:
-            resp = render_to_string(template, request=request)
+            resp = render_to_string(template_name=template, request=request)
         except Exception as e:
             if debug:
                 raise e
@@ -83,8 +84,11 @@ def render_asset(template, request, content_type="text/plain",
         if not debug or force_shrink is True:
             try:
                 if content_type.endswith("javascript"):
+                    logger.info("js minified")
                     from jsmin import jsmin
                     resp = jsmin(resp)
+                else:
+                    logger.info("content Type: %s", content_type)
             except Exception as e:
                 logger.warning("error shrinking js: %s", e)
 
@@ -100,18 +104,22 @@ def render_asset(template, request, content_type="text/plain",
         resp['Content-Type'] = content_type
         resp['etag'] = etag
 
-        now = datetime.utcnow()
-        modified = now.strftime('%H:%M:%S-%a/%d/%b/%Y')
+        now = timezone.now()
+        modified = now.astimezone(timezone.utc).strftime('%H:%M:%S-%a/%d/%b/%Y')
         resp['Last-Modified'] = modified
 
         if not debug:
-            resp['Cache-Control'] = 'max-age'
-            expires = now.replace(year=now.year+1)
+            resp['Cache-Control'] = 'public, max-age=6000'
+            expires = now.astimezone(timezone.utc) + timedelta(days=365)
             resp['Expires'] = expires.strftime('%H:%M:%S-%a/%d/%b/%Y')
             cache.set(key, resp, 600)
             logger.info("caching: %s" % template)
         else:
-            resp['Cache-Control'] = 'no-cache'
+            resp['Cache-Control'] = 'public, max-age=60'
+            expires = now.astimezone(timezone.utc) + timedelta(minutes=3)
+            resp['Expires'] = expires.strftime('%H:%M:%S-%a/%d/%b/%Y')
+            cache.set(key, resp, 60)
+            logger.info("caching: %s" % template)
     return resp
 
 

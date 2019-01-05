@@ -1,0 +1,76 @@
+function initialiseGoogleAdsense() {
+  if (typeof ga_adsense !== "undefined" && typeof window.adsbygoogle === "undefined") {
+    try {
+      (
+        adsbygoogle = window.adsbygoogle || []).push({
+        google_ad_client: ga_adsense,
+        // enable_page_level_ads: true
+      });
+      
+      console.log(ga_adsense);
+      try {
+        initialiseGoogleAdsense = function () {
+          console.log("ADSense Already done!");
+        };
+      } catch (e) {
+        console.log("Error overwriting initialise GAs");
+      }
+    } catch (e) {
+      console.log("Error initialising GA " + e);
+    }
+  } else if (typeof ga_adsense !== "undefined" && typeof window.adsbygoogle !== "undefined") {
+    try {
+      (
+        adsbygoogle = window.adsbygoogle || []).push({
+        google_ad_client: ga_adsense,
+        // enable_page_level_ads: true
+      });
+    } catch (e) {
+      console.log("Error pushing gadsense id "+ e);
+    }
+  }
+}
+
+function initialiseGoogleAnalytics() {
+  if (typeof ga_ua !== "undefined") {
+    if (typeof gtag === "undefined") {
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+    }
+    
+    try {
+      gtag('js', new Date());
+      gtag('config', ga_ua);
+      if (typeof ga_ads !== "undefined") {
+        gtag('config', ga_ads);
+      }
+      // Google Ads conversion tracking
+      console.log(ga_ua);
+      try {
+        initialiseGoogleAnalytics = function () {
+          console.log("AL Already done!");
+        };
+      } catch (e) {
+        console.log("Error overwriting initialise GA " + e);
+      }
+    } catch (e) {
+      console.log("Error initialising GAs " + e);
+    }
+  }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  // Initialise Google Analytics
+    if (typeof ga_ua !== "undefined") {
+        if (typeof initialiseGoogleAnalytics === 'function') {
+            initialiseGoogleAnalytics();
+        }
+    }
+    
+    // Initialise Google Adsense
+    if (typeof ga_adsense !== "undefined") {
+        if (typeof initialiseGoogleAdsense === 'function') {
+            initialiseGoogleAdsense();
+        }
+    }
+});
