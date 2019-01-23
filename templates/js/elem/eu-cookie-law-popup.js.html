@@ -1,0 +1,49 @@
+{% load i18n %}
+
+function acceptLawCookie() {
+  console.log("Law Cookie Accepted");
+  let lawDialog = document.getElementById("CookieDialog");
+  if ( lawDialog !== null) {
+    lawDialog.hidden = true;
+    localStorage.setItem("cookie-consent", "1");
+    if (startG !== "undefined") {
+      startG();
+      // Initialise tracking, if defined
+    }
+  }
+}
+
+function injectLawPopUp() {
+  let container = null;
+  if (document.getElementById("CookieDialog") === null) {
+    container = document.createElement('div');
+    document.body.prepend(container);
+  } else {
+    container = document.getElementById("CookieDialog");
+  }
+  
+  if (container != null) {
+    container.id = "CookieDialog";
+    container.classList = "eu-law-container";
+    //container.hidden = true;
+    container.innerHTML = '<div id="CookieDialogContent" class="eu-law-dialog">' +
+      '{% trans "We use cookies to give you the best experience. If you continue using our website, we assume that you are happy to receive all cookies on this website." %}' +
+      '<br><button id="acceptLawCookieBtn" class="lawCookieBtn" style="margin: 20px;">{% trans "Continue" %}</button></div>';
+    let btn = document.getElementById("acceptLawCookieBtn");
+    btn.addEventListener("click", acceptLawCookie);
+  }
+}
+
+
+document.addEventListener('DOMContentLoaded', function () {
+  // define cookieConsent in Document with false
+  cookieConsent = localStorage.getItem("cookie-consent");
+  if (cookieConsent === "undefined" || cookieConsent == null || cookieConsent === "0") {
+    if (cookieConsent === "undefined" || cookieConsent == null ) {
+      localStorage.setItem("cookie-consent", "0");
+    } else {
+      localStorage.setItem("cookie-consent", "1");
+    }
+    injectLawPopUp();
+  }
+});
