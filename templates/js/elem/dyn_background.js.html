@@ -1,0 +1,32 @@
+
+function upgradeBackground(urls) {
+  if (urls.length <= 0) return;
+  
+  let url = urls.pop();
+  let img = document.createElement('img');
+  img.src = url;
+  img.onload = function () {
+    console.log("bg_image loaded: " + url);
+   document.body.style.background = "url(" + img.src + ") no-repeat center fixed";
+   document.body.style.backgroundSize = "cover";
+   //document.body.style.backgroundAttachment = "fixed";
+   
+   img.remove();
+   let now = new Date();
+   let loadTime = now - window.start;
+   console.log("Load Time: "+ loadTime);
+   if (urls.length > 0 && loadTime < 2000) {
+    upgradeBackground(urls);
+   } else {
+     console.log("Finished upgrading background Images after " + loadTime + "ms");
+   }
+  }
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+  if (typeof background_img_urls !== "undefined") {
+    window.start = new Date();
+    // Spent Max 2 seconds upgrading background images
+    upgradeBackground(background_img_urls);
+  }
+});

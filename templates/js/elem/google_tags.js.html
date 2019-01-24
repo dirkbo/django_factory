@@ -40,7 +40,7 @@ function initialiseGoogleAnalytics() {
     
     try {
       gtag('js', new Date());
-      gtag('config', ga_ua);
+      gtag('config', ga_ua, { 'anonymize_ip': true });
       if (typeof ga_ads !== "undefined") {
         gtag('config', ga_ads);
       }
@@ -59,18 +59,25 @@ function initialiseGoogleAnalytics() {
   }
 }
 
-document.addEventListener('DOMContentLoaded', function() {
-  // Initialise Google Analytics
-    if (typeof ga_ua !== "undefined") {
-        if (typeof initialiseGoogleAnalytics === 'function') {
-            initialiseGoogleAnalytics();
-        }
+function startG() {
+  if (typeof ga_ua !== "undefined") {
+      if (typeof initialiseGoogleAnalytics === 'function') {
+        initialiseGoogleAnalytics();
+      }
     }
-    
+  
     // Initialise Google Adsense
     if (typeof ga_adsense !== "undefined") {
-        if (typeof initialiseGoogleAdsense === 'function') {
-            initialiseGoogleAdsense();
-        }
+      if (typeof initialiseGoogleAdsense === 'function') {
+        initialiseGoogleAdsense();
+      }
     }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  // Initialise Google Analytics
+  if (cookieConsent === "undefined" || cookieConsent == "1") {
+    // If cookie Consent var is undefined or accepted
+    startG();
+  }
 });
