@@ -1,0 +1,265 @@
+////// Simple request Manager
+// http://stackoverflow.com/questions/4785724/queue-ajax-requests-using-jquery-queue
+
+
+var idle_counter = 0;
+// count idle loops in request manager; check for new items every 30 seconds if no unseen items.
+
+function closeWarning(){
+    return 'It looks like you have pending changes -- if you leave now, your changes will be lost.'
+}
+
+// Show an element
+function vshow(elem) {
+  //console.log("Style before vshow "+ elem.id + " : "+  elem.style.display);
+
+  var disp_el = elem.getAttribute('use_display');
+  if (disp_el != null) {
+    //console.log("use display" + disp_el );
+    elem.style.display = disp_el;
+  } else {
+    elem.style.display = "block";
+    //console.log("Hidden element display restored: block");
+  }
+}
+
+// Hide an element
+function vhide(elem) {
+  //console.log("Style before vhide "+ elem.id + " : "+  elem.style.display);
+
+  if (elem.style.display !== null) {
+    let disp = elem.style.display;
+    //console.log("Hidden element display before: " + disp );
+  }
+	elem.style.display = 'none';
+}
+
+// Toggle element visibility
+function vtoggle(elem) {
+  var disp = "block";
+  if (elem.getAttribute('use_display') != null) {
+    disp = elem.getAttribute('use_display');
+  }
+	// If the element is visible, hide it
+	if (window.getComputedStyle(elem).display === disp) {
+		vhide(elem);
+		return;
+	}
+
+	// Otherwise, show it
+	show(elem);
+}
+
+function startLoading(lock) {
+    if ((typeof lock === "undefined") === true ) {
+         lock = false;
+    }
+    var aj_loading = document.querySelector('#ajax_loading');
+    if (aj_loading != null ) {
+      aj_loading.classList.add('is-active');
+    }
+    var refresh_button = document.querySelector('#refreshButton');
+    if (refresh_button != null) {
+      vhide(refresh_button);
+    }
+    
+    var show_loading = document.querySelector('#showLoading');
+    if (show_loading != null) {
+      vshow(show_loading);
+    }
+    if (lock === true) {
+        window.onbeforeunload = closeWarning;
+    }
+}
+
+function doneLoading(lock) {
+    var aj_loading = document.querySelector('#ajax_loading');
+    if (aj_loading != null ) {
+      aj_loading.classList.classList.remove('is-active');
+    }
+    var show_loading = document.querySelector('#showLoading');
+    if (show_loading != null) {
+      vhide(show_loading);
+    }
+    var refresh_button = document.querySelector('#refreshButton');
+    if (refresh_button != null) {
+      vshow(refresh_button);
+    }
+    window.onbeforeunload = null;
+}
+
+var ajaxManager = (function() {
+     var requests = [];
+     var requestsLow = [];
+
+     return {
+        requests: [],
+        requestsLow: [],
+        addReq:  function(opt) {
+            requests.push(opt);
+        },
+        addReqLow:  function(opt) {
+            requestsLow.push(opt);
+        },
+        removeReq:  function(opt) {
+            var indexOfOpt = requests.indexOf(opt);
+            if( indexOfOpt > -1 )
+                requests.splice(indexOfOpt, 1);
+            
+        },
+        removeReqLow:  function(opt) {
+            var indexOfOpt = requestsLow.indexOf(opt);
+            if( indexOfOpt > -1 )
+                requestsLow.splice(indexOfOpt, 1);
+        },
+        run: function() {
+            var self = this, oriSuc;
+            if( requests.length > 0 ) {
+                console.log("Pending Requests: " + requests.length);
+                idle_counter = 0;
+                startLoading();
+                oriSuc = requests[0].complete;
+
+                requests[0].complete = function() {
+                    console.log("shifting requests");
+                    if( typeof oriSuc === 'function' ) oriSuc();
+                    requests.shift();
+                    self.run.apply(self, []);
+                };
+                
+                if (requests[0].type == "GET" || requests[0].type == "get") {
+                  console.log("get");
+                  var httpRequest = new XMLHttpRequest();
+                  httpRequest.onreadystatechange = requests[0].success;
+                  httpRequest.open('GET', requests[0].url);
+                  if (csrftoken) {
+                    //httpRequest.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+                    httpRequest.setRequestHeader("X-CSRFToken", csrftoken);
+                  }
+                  if (Object.keys(requests[0].data).length > 0) {
+                    var sdata = new FormData();
+                    var item = requests[0].data;
+                    Object.keys(item).forEach(key => sdata.append(key, item[key]));
+                    httpRequest.send(sdata);
+                  } else
+                    httpRequest.send();
+                } else if (requests[0].type == "POST" || requests[0].type == "post") {
+                  console.log("POST");
+                  var httpRequest = new XMLHttpRequest();
+                  httpRequest.onreadystatechange = (function() {
+                    if (this.readyState === XMLHttpRequest.DONE) {
+                      if (this.status === 200) {
+                        requests[0].success(this.response);
+                      }
+                      doneLoading();
+                      requests[0].complete();
+                      return;
+                    }
+                  });
+                  
+                  httpRequest.open('POST', requests[0].url);
+                  httpRequest.setRequestHeader("X-Requested-With", "XMLHttpRequest");
+                  if (csrftoken) {
+                    //httpRequest.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+                    httpRequest.setRequestHeader("X-CSRFToken", csrftoken);
+                  }
+                  if (Object.keys(requests[0].data).length > 0) {
+                    var sdata = new FormData();
+                    var item = requests[0].data;
+                    Object.keys(item).forEach(key => sdata.append(key, item[key]));
+                    httpRequest.send(sdata);
+                  } else
+                    httpRequest.send();
+                } else {
+                  console.log("Legacy: " + requests[0].type);
+                  //$.ajax(requests[0]);
+                }
+                
+            } else if( requestsLow.length > 0) {
+                console.log("Pending RequestsLow: " + requestsLow.length);
+                idle_counter = 0;
+                startLoading();
+                oriSuc = requestsLow[0].complete;
+
+                requestsLow[0].complete = function() {
+                     if( typeof oriSuc === 'function' ) oriSuc();
+                     requestsLow.shift();
+                     self.run.apply(self, []);
+                };
+                
+                if (requestsLow[0].type === "GET" || requestsLow[0].type === "get") {
+                  console.log("get");
+                  var httpRequest = new XMLHttpRequest();
+                  httpRequest.onreadystatechange = requestsLow[0].success;
+                  httpRequest.open('GET', requestsLow[0].url);
+                  if (csrftoken) {
+                    //httpRequest.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+                    httpRequest.setRequestHeader("X-CSRFToken", csrftoken);
+                  }
+                  if (Object.keys(requestsLow[0].data).length > 0) {
+                    var sdata = new FormData();
+                    var item = requestsLow[0].data;
+                    Object.keys(item).forEach(key => sdata.append(key, item[key]));
+                    httpRequest.send(sdata);
+                  } else
+                    httpRequest.send();
+                } else if (requestsLow[0].type === "POST" || requestsLow[0].type === "post") {
+                  console.log("POST");
+                  var httpRequest = new XMLHttpRequest();
+                  httpRequest.onreadystatechange = (function() {
+                    if (this.readyState === XMLHttpRequest.DONE) {
+                      if (this.status === 200) {
+                        requestsLow[0].success(this.response);
+                      }
+                      doneLoading();
+                      requestsLow[0].complete();
+                    }
+                  });
+                  
+                  httpRequest.open('POST', requestsLow[0].url);
+                  httpRequest.setRequestHeader("X-Requested-With", "XMLHttpRequest");
+                  if (csrftoken) {
+                    //httpRequest.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+                    httpRequest.setRequestHeader("X-CSRFToken", csrftoken);
+                  }
+                  if (Object.keys(requestsLow[0].data).length > 0) {
+                    var sdata = new FormData();
+                    var item = requestsLow[0].data;
+                    Object.keys(item).forEach(key => sdata.append(key, item[key]));
+                    httpRequest.send(sdata);
+                  } else
+                    httpRequest.send();
+                } else {
+                  console.log("Legacy: " + requestsLow[0].type);
+                  //$.ajax(requestsLow[0]);
+                }
+                
+            } else {
+                doneLoading();
+                idle_counter += 1;
+                if (idle_counter > 29 ) {
+                    // do idle stuff
+                    if( typeof do_idle === 'function' ) do_idle();
+                    idle_counter = 0;
+                    console.log("Done do_idle");
+                }
+                
+                self.tid = setTimeout(function() {
+                self.run.apply(self, []);
+              }, 1000);
+            }
+        },
+        stop:  function() {
+            requests = [];
+            clearTimeout(this.tid);
+        }
+     };
+}());
+
+document.addEventListener('DOMContentLoaded', function() {
+    ajaxManager.run();
+    console.log("ajaxManager Started");
+});
+
+////////////////////////////////////////////////////////////////////////
+
