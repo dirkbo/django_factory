@@ -105,15 +105,18 @@ function loadImageDone() {
     // Get first and last
     let galleryImages = document.querySelectorAll(gallery + ' img');
     let first = null;
+    let last = null;
     let first_preview = null;
     
-    if (galleryImages[0] !== null) {
-        first = galleryImages[0].getAttribute('full');
-        first_preview = galleryImages[0].getAttribute('src');
+    if (galleryImages.length > 0) {
+        // console.log("gallery has " + galleryImages.length + " Images, finding first and last");
+        if (galleryImages[0] !== null) {
+            first = galleryImages[0].getAttribute('full');
+            first_preview = galleryImages[0].getAttribute('src');
+        }
+        if (galleryImages[galleryImages.length - 1] !== null)
+            last = galleryImages[galleryImages.length - 1].getAttribute('full');
     }
-    let last = null;
-    if (galleryImages[galleryImages.length - 1] !== null)
-        last = galleryImages[galleryImages.length - 1].getAttribute('full');
     
     //var first = galleryImages.first().attr('full');
     //var last = galleryImages.last().attr('full');
@@ -123,15 +126,17 @@ function loadImageDone() {
     let lel = document.querySelector(gallery + " img[full='" + source + "']");
     let next = null;
     let next_preview = null;
-    if (lel.nextElementSibling !== null) {
-        next = lel.nextElementSibling.getAttribute('full');
-        next_preview = lel.nextElementSibling.getAttribute('src');
-        //console.log("next preview: " + next_preview);
-    }
     let prev = null;
-    if (lel.previousElementSibling !== null)
-        prev = lel.previousElementSibling.getAttribute('full');
-    // var prev = lel.prev().attr('full');
+    if (lel !== null) {
+        if (lel.nextElementSibling !== null) {
+            next = lel.nextElementSibling.getAttribute('full');
+            next_preview = lel.nextElementSibling.getAttribute('src');
+            //console.log("next preview: " + next_preview);
+        }
+        if (lel.previousElementSibling !== null)
+            prev = lel.previousElementSibling.getAttribute('full');
+        // var prev = lel.prev().attr('full');
+    }
     
     // Resize displayed images
     FullImageSize();
