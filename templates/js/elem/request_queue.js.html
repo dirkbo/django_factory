@@ -49,7 +49,7 @@ var ajaxManager = (function() {
         },
         run: function() {
             var self = this,
-                orgSuc;
+                oriSuc;
 
             if( requests.length ) {
                 idle_counter = 0;
@@ -78,8 +78,10 @@ var ajaxManager = (function() {
             } else {
                 doneLoading();
                 idle_counter += 1;
+                console.log("Idle: " + idle_counter)
                 if (idle_counter > 29 ) {
                     // do idle stuff
+                    console.log("Do Idle");
                     if( typeof do_idle === 'function' ) do_idle();
                     idle_counter = 0;
                 }
