@@ -76,7 +76,7 @@ function startG() {
 
 document.addEventListener('DOMContentLoaded', function() {
   // Initialise Google Analytics
-  if (cookieConsent === "undefined" || cookieConsent == "1") {
+  if (typeof  cookieConsent === "undefined" || cookieConsent == "1") {
     // If cookie Consent var is undefined or accepted
     startG();
   }
