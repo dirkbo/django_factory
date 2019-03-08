@@ -37,12 +37,15 @@ function initialiseGoogleAnalytics() {
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
     }
-    
+
     try {
       gtag('js', new Date());
       gtag('config', ga_ua, { 'anonymize_ip': true });
       if (typeof ga_ads !== "undefined") {
         gtag('config', ga_ads);
+      }
+      if (typeof window.gtag === "undefined") {
+        window.gtag = gtag;
       }
       // Google Ads conversion tracking
       console.log(ga_ua);
@@ -72,6 +75,56 @@ function startG() {
         initialiseGoogleAdsense();
       }
     }
+}
+
+function track_conversion(ads_tracking) {
+  if (typeof gtag === "undefined") {
+    if (typeof ga !== "undefined") {
+      var gtag = ga;
+    } else {
+      console.log("no gtag enabled");
+      return;
+    }
+  }
+  
+  if (typeof ads_tracking !== "undefined") {
+    try {
+      gtag('event', 'conversion', {
+        'send_to': ads_tracking
+      });
+    } catch (e) {
+      console.log("error tracking " + ads_tracking)
+    }
+  }
+}
+
+function track_gtag_event(action, category, label, value) {
+  if (typeof gtag === "undefined") {
+    if (typeof ga !== "undefined") {
+      var gtag = ga;
+    } else {
+      console.log("no gtag enabled");
+      return;
+    }
+  }
+  
+  try {
+    if (typeof value === "undefined" && typeof label === "undefined" && typeof category === "undefined") {
+      gtag('event', action);
+    } else if (typeof value === "undefined" && typeof label === "undefined") {
+      gtag('event', action, {'event_category': category});
+    } else if (typeof value === "undefined") {
+      gtag('event', action, {'event_category': category, 'event_label': label});
+    } else {
+      gtag('event', action, {'event_category': category, 'event_label': label, 'event_value': value});
+    }
+  } catch (e) {
+    if(e.name === "ReferenceError") {
+      console.log("no gtag enabled");
+    } else {
+      console.log("error: " + e.name);
+    }
+  }
 }
 
 document.addEventListener('DOMContentLoaded', function() {
