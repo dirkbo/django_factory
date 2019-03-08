@@ -100,12 +100,7 @@ function track_conversion(ads_tracking) {
 
 function track_gtag_event(action, category, label, value) {
   if (typeof gtag === "undefined") {
-    if (typeof ga !== "undefined") {
-      var gtag = ga;
-    } else {
-      console.log("no gtag enabled");
       return;
-    }
   }
   
   try {
@@ -125,6 +120,13 @@ function track_gtag_event(action, category, label, value) {
       console.log("error: " + e.name);
     }
   }
+}
+
+function track_virtual_view(path) {
+  if (typeof gtag === "undefined" || typeof ga_ua === "undefined") {
+      return;
+  }
+  gtag('config', ga_ua, {'page_path': path});
 }
 
 document.addEventListener('DOMContentLoaded', function() {
