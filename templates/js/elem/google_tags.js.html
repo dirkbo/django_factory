@@ -122,11 +122,15 @@ function track_gtag_event(action, category, label, value) {
   }
 }
 
-function track_virtual_view(path) {
+function track_virtual_view(path, title) {
   if (typeof gtag === "undefined" || typeof ga_ua === "undefined") {
       return;
   }
-  gtag('config', ga_ua, {'page_path': path});
+  if(typeof title === "undefined") {
+    gtag('config', ga_ua, {'page_path': path});
+  } else {
+    gtag('config', ga_ua, {'page_path': path, 'page_title': title});
+  }
 }
 
 document.addEventListener('DOMContentLoaded', function() {
