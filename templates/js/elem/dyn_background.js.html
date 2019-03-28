@@ -8,6 +8,9 @@ function upgradeBackground(urls) {
   if (typeof window.res === "undefined")
     window.res = 0;
   
+  if (typeof window.max_bg_res === "undefined")
+    window.max_bg_res = window.innerHeight * window.innerWidth;
+  
   let url = urls.pop();
   let img = document.createElement('img');
   img.src = url;
@@ -20,6 +23,7 @@ function upgradeBackground(urls) {
       console.log("new image is smaller than old, aborting");
       return;
     }
+    
     window.res = new_res;
     document.body.style.background = "url(" + img.src + ") no-repeat center fixed";
     document.body.style.backgroundSize = "cover";
@@ -29,6 +33,12 @@ function upgradeBackground(urls) {
     let now = new Date();
     let loadTime = now - window.start;
     console.log("Load Time: "+ loadTime);
+    
+    if (new_res > window.max_bg_res) {
+      console.log("new image is already bigger than window, aborting");
+      return;
+    }
+    
     if (urls.length > 0 && loadTime < 2000) {
       upgradeBackground(urls);
     } else {
