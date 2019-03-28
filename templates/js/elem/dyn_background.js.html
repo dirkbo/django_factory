@@ -2,24 +2,38 @@
 function upgradeBackground(urls) {
   if (urls.length <= 0) return;
   
+  if (typeof window.start === "undefined")
+    window.start = new Date();
+  
+  if (typeof window.res === "undefined")
+    window.res = 0;
+  
   let url = urls.pop();
   let img = document.createElement('img');
   img.src = url;
   img.onload = function () {
     console.log("bg_image loaded: " + url);
-   document.body.style.background = "url(" + img.src + ") no-repeat center fixed";
-   document.body.style.backgroundSize = "cover";
-   //document.body.style.backgroundAttachment = "fixed";
+    let new_res = img.width * img.height;
+    console.log("Loaded Background Image: " + new_res);
+    console.log("Old Background Image: " + window.res);
+    if (new_res < window.res) {
+      console.log("new image is smaller than old, aborting");
+      return;
+    }
+    window.res = new_res;
+    document.body.style.background = "url(" + img.src + ") no-repeat center fixed";
+    document.body.style.backgroundSize = "cover";
+    //document.body.style.backgroundAttachment = "fixed";
    
-   img.remove();
-   let now = new Date();
-   let loadTime = now - window.start;
-   console.log("Load Time: "+ loadTime);
-   if (urls.length > 0 && loadTime < 2000) {
-    upgradeBackground(urls);
-   } else {
-     console.log("Finished upgrading background Images after " + loadTime + "ms");
-   }
+    img.remove();
+    let now = new Date();
+    let loadTime = now - window.start;
+    console.log("Load Time: "+ loadTime);
+    if (urls.length > 0 && loadTime < 2000) {
+      upgradeBackground(urls);
+    } else {
+      console.log("Finished upgrading background Images after " + loadTime + "ms");
+    }
   }
 }
 
