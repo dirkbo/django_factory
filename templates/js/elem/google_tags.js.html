@@ -122,6 +122,27 @@ function track_gtag_event(action, category, label, value) {
   }
 }
 
+function track_gtag_event_once(store_as, action, category, label, value, callback) {
+  var track_once_stored = localStorage.getItem(store_as);
+  
+  if (track_once_stored == null) {
+    track_once_stored = "0";
+  }
+  
+  if (track_once_stored === "0") {
+    if (typeof callback === "undefined") {
+      callback = function (store_as) {
+        console.log("Tracked Unique Event: " + store_as);
+      };
+    }
+  
+    localStorage.setItem(store_as, "1");
+    track_gtag_event(action, category, label, value);
+  
+    callback(store_as);
+  }
+}
+
 function track_virtual_view(path, title) {
   if (typeof gtag === "undefined" || typeof ga_ua === "undefined") {
       return;

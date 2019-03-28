@@ -13,6 +13,9 @@ def google_ids(request):
                    'GOOGLE_ADS_AW': False
                    }
 
+    if request.META.get('HTTP_DNT', '0') == '1':
+        return no_tracking
+
     if request.user.is_staff and track_staff is False:
         return no_tracking
 
