@@ -1,0 +1,84 @@
+{% load static %}
+const VERSION = "{% now 'Y-m-d' %}";
+const CACHE_VERSION = "df-u" + VERSION;
+const OFFLINE_URL = "/";
+const cacheAll = false;
+// Cache loaded urls while going
+
+let cacheablePages = [
+];
+// Will be cached on installing
+
+let preferCachedPages = [
+];
+// Will be preferably served from caches
+
+let neverCachePages = [
+]
+let neverCachePaths = [
+  "/admin/" 
+]
+// Never cache these paths and urls
+
+self.addEventListener('fetch', event => {
+  event.respondWith(async function() {
+    const cachedResponse = await caches.match(event.request.clone()).catch(() => { return null; });
+    if (event.request.url in preferCachedPages && event.request.method.toLowerCase() !== "POST") {
+      return cachedResponse;
+    }
+    const networkResponse = await fetch(event.request.clone()).catch(() => { return null; });
+    
+    // Skip cross-origin requests, like those for Google Analytics.
+    if (!event.request.url.startsWith(self.location.origin)) {
+      return networkResponse;
+    }
+      
+    if (cachedResponse && !networkResponse) {
+      return cachedResponse;
+    }
+    // Return cached response if network response fails for whatever reason. 
+    
+    let neverCache = event.request.url in neverCachePages === false;
+    if (neverCache == false) 
+      neverCachePaths.forEach(function (path) { if (event.request.url.includes(path)) neverCache = true; });
+    if (networkResponse != null && neverCache == false) {
+      if (cacheAll == true || event.request.url in cacheablePages) {
+        if (event.request.method.toLowerCase() !== "post" && networkResponse.type == "basic" && networkResponse.status == 200) {
+          await caches.open(CACHE_VERSION)
+              .then(cache => {
+                cache.put(event.request.clone(), networkResponse.clone());
+              });
+        }
+      }
+    }
+    return networkResponse;
+  }());
+});
+
+self.addEventListener('activate', function(e){
+  // Cleanup old caches;
+  e.waitUntil(
+    caches.keys()
+      .then(cacheNames => {
+      return Promise.all(
+          cacheNames.map(cacheName => {
+              if (CACHE_VERSION !== cacheName) {
+                  return caches.delete(cacheName);
+              }
+          })
+      );
+    })
+);
+});
+
+
+self.addEventListener('install', function(event) {
+  event.waitUntil(caches.open(CACHE_VERSION)
+    .then(cache => {
+        return cache.addAll(preferCachedPages);
+    })
+    .then(() => {
+        return self.skipWaiting();
+    })
+   );
+});

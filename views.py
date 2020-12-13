@@ -16,6 +16,8 @@ from hashlib import sha224
 from datetime import datetime, timedelta
 
 # Get an instance of a logger
+from django.views.generic import TemplateView
+
 logger = logging.getLogger(__name__)
 
 
@@ -73,7 +75,10 @@ def render_asset(template, request, content_type="text/plain",
 
     if resp is False:
         try:
-            resp = render_to_string(template_name=template, request=request)
+            context = dict()
+            context['hide_log'] = not getattr(settings, 'DEBUG', False)
+            logger.info("Hide js log: %s", context['hide_log'])
+            resp = render_to_string(template_name=template, request=request, context=context)
         except Exception as e:
             if debug:
                 raise e
@@ -108,18 +113,14 @@ def render_asset(template, request, content_type="text/plain",
         modified = now.astimezone(timezone.utc).strftime('%H:%M:%S-%a/%d/%b/%Y')
         resp['Last-Modified'] = modified
 
-        if not debug:
-            resp['Cache-Control'] = 'public, max-age=6000'
-            expires = now.astimezone(timezone.utc) + timedelta(days=365)
-            resp['Expires'] = expires.strftime('%H:%M:%S-%a/%d/%b/%Y')
-            cache.set(key, resp, 600)
-            logger.info("caching: %s" % template)
-        else:
-            resp['Cache-Control'] = 'public, max-age=60'
-            expires = now.astimezone(timezone.utc) + timedelta(minutes=3)
-            resp['Expires'] = expires.strftime('%H:%M:%S-%a/%d/%b/%Y')
-            cache.set(key, resp, 60)
-            logger.info("caching: %s" % template)
+        cache_time_seconds = 60 * 60
+        if debug:
+            cache_time_seconds = 60
+        resp['Cache-Control'] = 'public, max-age={}'.format(cache_time_seconds)
+        expires = now.astimezone(timezone.utc) + timedelta(seconds=cache_time_seconds)
+        resp['Expires'] = expires.strftime('%H:%M:%S-%a/%d/%b/%Y')
+        cache.set(key, resp, cache_time_seconds)
+        logger.info("caching: %s" % template)
     return resp
 
 
@@ -136,7 +137,45 @@ def css_file(request, path):
 
 
 @gzip_page
+def manifest(request):
+    # manifest.json 
+    # include path in urls:
+    # 
+    # path('manifest.json', manifest, name='html5_manifest'),
+    #    
+    # Make sure path is on highest level, directly under / 
+    import json
+    language = getattr(request, 'LANGUAGE_CODE', "en").lower()
+
+    context = dict()
+    context["manifest_version"] = 2
+    pwa_settings = getattr(settings, 'PWA_SETTINGS', {})
+
+    pwa_settings_texts = pwa_settings.get('texts', {})
+    pwa_settings_text = pwa_settings_texts.get(language, {})
+    context["name"] = pwa_settings_text.get("long_name", "A Blog")
+    context["short_name"] = pwa_settings_text.get("short_name", "Blog")
+    context["description"] = pwa_settings_text.get("description", "Description")
+    # Get language specific texts
+
+    context["start_url"] = pwa_settings.get('start_url', '/')
+    context["display"] = pwa_settings.get('display', '')
+    context["orientation"] = pwa_settings.get('orientation', '')
+
+    context["background_color"] = pwa_settings.get("background_color", "#512498")
+    context["theme_color"] = pwa_settings.get("theme_color", "#512498")
+    context["icons"] = pwa_settings.get("icons", [])
+    context["permissions"] = pwa_settings.get("permissions", [])
+
+    return HttpResponse(json.dumps(context), content_type="text/json")
+
+
+@gzip_page
 def pwa_serviceworker(request):
+    # Service worker view 
+    # include url 
+    #     path('pwa-serviceworker.js', pwa_serviceworker, name='pwa_serviceworker'),
+    # Make sure url is directly under /, can only access same level or deeper. 
     template = get_template('js/service_worker.js.html')
     html = template.render()
     return HttpResponse(html, content_type="application/x-javascript")

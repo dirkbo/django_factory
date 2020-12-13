@@ -1,10 +1,7 @@
-from django.conf.urls import url
-
+from django.urls import re_path
 from django_factory import views
 
 urlpatterns = [
-     url(r'^pwa-serviceworker.js', views.pwa_serviceworker, name='pwa_serviceworker'),
-     url(r'^(?P<path>.+)\.js', views.js_file, name='js_file'),
-     url(r'^(?P<path>.+)\.css', views.css_file, name='css_file'),
-
+     re_path(r'^(?P<path>.+)\.js', views.js_file, name='js_file'),
+     re_path(r'^(?P<path>.+)\.css', views.css_file, name='css_file'),
 ]
