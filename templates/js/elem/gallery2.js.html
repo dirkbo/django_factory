@@ -281,8 +281,8 @@ function openImage(source, gallery_id, preview) {
     //let elem = document.querySelector(dialog);
     try {
         if (!document.fullscreenElement) {
-            dialog.requestFullscreen().then({}).catch(err => {
-                console.log(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`);
+            dialog.requestFullscreen().then({}).catch(function(err) {
+                console.log("Error attempting to enable full-screen mode: ${err.message} (${err.name})");
                 });
         }
     } catch (e) {

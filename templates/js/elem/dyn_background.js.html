@@ -1,5 +1,5 @@
 
-function upgradeBackground(urls) {
+function upgradeBackground(urls, target_div_id) {
   if (urls.length <= 0) return;
   
   if (typeof window.start === "undefined")
@@ -23,11 +23,19 @@ function upgradeBackground(urls) {
       console.log("new image is smaller than old, aborting");
       return;
     }
-    
-    window.res = new_res;
-    document.body.style.background = "url(" + img.src + ") no-repeat center fixed";
-    document.body.style.backgroundSize = "cover";
-    //document.body.style.backgroundAttachment = "fixed";
+
+    if (target_div_id == null) {
+      window.res = new_res;
+      document.body.style.background = "url(" + img.src + ") no-repeat center fixed";
+      document.body.style.backgroundSize = "cover";
+      //document.body.style.backgroundAttachment = "fixed";
+    } else {
+      let target_div = document.getElementById(target_div_id);
+      if (target_div != null) {
+        target_div.style.background= "url(" + img.src + ") no-repeat center fixed";
+        document.body.style.backgroundSize = "cover";
+      }
+    }
    
     img.remove();
     let now = new Date();
